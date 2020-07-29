@@ -2,7 +2,6 @@ package com.demo.calculator.entity;
 
 import lombok.Data;
 
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Data

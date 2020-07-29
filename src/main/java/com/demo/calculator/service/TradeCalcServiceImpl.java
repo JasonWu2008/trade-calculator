@@ -1,12 +1,16 @@
 package com.demo.calculator.service;
 
 import com.demo.calculator.entity.Trade;
+import com.demo.calculator.entity.TradeOperation;
 import com.demo.calculator.exceptions.DuplicatedTradeException;
 import com.demo.calculator.exceptions.TradeInputInvalidException;
 import com.demo.calculator.exceptions.TradeNotFoundException;
+import com.demo.calculator.model.CalculationResult;
 import com.demo.calculator.repository.ITradeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 @Service
 public class TradeCalcServiceImpl implements ITradeCalcService {
@@ -15,6 +19,18 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
     @Autowired
     TradeCalcServiceImpl(ITradeRepository tradeRepository) {
         this.tradeRepository = tradeRepository;
+    }
+
+    @Override
+    public CalculationResult calculate(String securityCode) {
+        Map<Long, Trade> tradeMap = tradeRepository.findTrades(securityCode);
+        CalculationResult calculationResult = new CalculationResult();
+        calculationResult.setSecurityCode(securityCode);
+        for (Trade trade : tradeMap.values()) {
+            processBuy(calculationResult, trade);
+            processSell(calculationResult, trade);
+        }
+        return calculationResult;
     }
 
     //check insert duplicate
@@ -36,11 +52,12 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
         if (existed == null) {
             throw new TradeNotFoundException("Trade Id " + trade.getTradeId());
         }
+        tradeRepository.removeFromQueue(existed);
         existed.setVersion(trade.getVersion() + 1);
         existed.setQuantity(trade.getQuantity());
         existed.setTradeOperation(trade.getTradeOperation());
         existed.setSecurityCode(trade.getSecurityCode());
-        tradeRepository.update(existed);
+        tradeRepository.addToQueue(existed);
         return existed;
     }
 
@@ -60,10 +77,6 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
         return existed;
     }
 
-    public Trade findLastTrade(String securityCode) {
-        return tradeRepository.findLastTrade(securityCode);
-    }
-
     void clearAll() {
         tradeRepository.clearAll();
     }
@@ -71,5 +84,21 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
     @Override
     public Trade load(long tradeId) {
         return tradeRepository.load(tradeId);
+    }
+
+    private void processSell(CalculationResult calculationResult, Trade newTrade) {
+        if (newTrade.getTradeOperation() != TradeOperation.SELL) {
+            return;
+        }
+        calculationResult.setTradeOperation(TradeOperation.SELL);
+        calculationResult.setQuantity(calculationResult.getQuantity() - newTrade.getQuantity());
+    }
+
+    private void processBuy(CalculationResult calculationResult, Trade newTrade) {
+        if (newTrade.getTradeOperation() != TradeOperation.BUY) {
+            return;
+        }
+        calculationResult.setTradeOperation(TradeOperation.BUY);
+        calculationResult.setQuantity(calculationResult.getQuantity() + newTrade.getQuantity());
     }
 }

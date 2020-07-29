@@ -1,6 +1,7 @@
 package com.demo.calculator.service;
 
 import com.demo.calculator.entity.Trade;
+import com.demo.calculator.model.CalculationResult;
 
 public interface ITradeCalcService {
     Trade insert(Trade trade);
@@ -9,7 +10,7 @@ public interface ITradeCalcService {
 
     Trade cancel(Trade trade);
 
-    Trade findLastTrade(String securityCode);
-
     Trade load(long tradeId);
+
+    CalculationResult calculate(String securityCode);
 }

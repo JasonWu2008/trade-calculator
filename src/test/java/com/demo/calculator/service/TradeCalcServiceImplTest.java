@@ -4,6 +4,7 @@ import com.demo.calculator.entity.Trade;
 import com.demo.calculator.entity.TradeOperation;
 import com.demo.calculator.exceptions.DuplicatedTradeException;
 import com.demo.calculator.exceptions.TradeNotFoundException;
+import com.demo.calculator.model.CalculationResult;
 import com.demo.calculator.repository.ITradeRepository;
 import com.demo.calculator.repository.impl.TradeRepositoryCacheImpl;
 import org.junit.Assert;
@@ -18,10 +19,10 @@ public class TradeCalcServiceImplTest {
         tradeCalcService.insert(createTrade(1, "S01", 100, TradeOperation.SELL));
         tradeCalcService.insert(createTrade(2, "S01", 50, TradeOperation.BUY));
         tradeCalcService.insert(createTrade(3, "S01", 200, TradeOperation.SELL));
-        Trade existed = tradeCalcService.findLastTrade("S01");
-        Assert.assertEquals(existed.getSecurityCode(), "S01");
-        Assert.assertEquals(existed.getQuantity(), -250);
-        Assert.assertEquals(existed.getTradeOperation(), TradeOperation.SELL);
+        CalculationResult result = tradeCalcService.calculate("S01");
+        Assert.assertEquals(result.getSecurityCode(), "S01");
+        Assert.assertEquals(result.getQuantity(), -250);
+        Assert.assertEquals(result.getTradeOperation(), TradeOperation.SELL);
     }
 
     //duplicated test
@@ -91,7 +92,7 @@ public class TradeCalcServiceImplTest {
     }
 
     @Test
-    public void testFind() {
+    public void calcTest() {
         ITradeRepository tradeRepository = new TradeRepositoryCacheImpl();
         TradeCalcServiceImpl tradeCalcService = new TradeCalcServiceImpl(tradeRepository);
         tradeCalcService.clearAll();
@@ -102,20 +103,53 @@ public class TradeCalcServiceImplTest {
         tradeCalcService.cancel(createTrade(2, "ITC", 30, TradeOperation.BUY));
         tradeCalcService.insert(createTrade(4, "INF", 20, TradeOperation.SELL));
 
-        Trade existed_1 = tradeCalcService.findLastTrade("REL");
-        Assert.assertEquals(existed_1.getSecurityCode(), "REL");
-        Assert.assertEquals(existed_1.getQuantity(), 60);
-        Assert.assertEquals(existed_1.getTradeOperation(), TradeOperation.BUY);
+        CalculationResult result_1 = tradeCalcService.calculate("REL");
+        Assert.assertEquals(result_1.getSecurityCode(), "REL");
+        Assert.assertEquals(result_1.getQuantity(), 60);
+        Assert.assertEquals(result_1.getTradeOperation(), TradeOperation.BUY);
 
-        Trade existed_2 = tradeCalcService.findLastTrade("ITC");
-        Assert.assertEquals(existed_2.getSecurityCode(), "ITC");
-        Assert.assertEquals(existed_2.getQuantity(), 0);
-        Assert.assertEquals(existed_2.getTradeOperation(), TradeOperation.BUY);
+        CalculationResult result_2 = tradeCalcService.calculate("ITC");
+        Assert.assertEquals(result_2.getSecurityCode(), "ITC");
+        Assert.assertEquals(result_2.getQuantity(), 0);
+        Assert.assertEquals(result_2.getTradeOperation(), TradeOperation.BUY);
 
-        Trade existed_3 = tradeCalcService.findLastTrade("INF");
-        Assert.assertEquals(existed_3.getSecurityCode(), "INF");
-        Assert.assertEquals(existed_3.getQuantity(), 50);
-        Assert.assertEquals(existed_3.getTradeOperation(), TradeOperation.SELL);
+        CalculationResult result_3 = tradeCalcService.calculate("INF");
+        Assert.assertEquals(result_3.getSecurityCode(), "INF");
+        Assert.assertEquals(result_3.getQuantity(), 50);
+        Assert.assertEquals(result_3.getTradeOperation(), TradeOperation.SELL);
+    }
+
+    //insert -> update -> cancel -> update
+    @Test
+    public void complexCalcTest() {
+        ITradeRepository tradeRepository = new TradeRepositoryCacheImpl();
+        TradeCalcServiceImpl tradeCalcService = new TradeCalcServiceImpl(tradeRepository);
+        tradeCalcService.clearAll();
+        tradeCalcService.insert(createTrade(1, "RELA", 20, TradeOperation.BUY));
+        tradeCalcService.update(createTrade(1, "REL", 60, TradeOperation.BUY));
+        tradeCalcService.cancel(createTrade(1, "REL", 20, TradeOperation.SELL));
+        tradeCalcService.update(createTrade(1, "REL", 99, TradeOperation.BUY));
+        CalculationResult result_1 = tradeCalcService.calculate("REL");
+        Assert.assertEquals(result_1.getSecurityCode(), "REL");
+        Assert.assertEquals(result_1.getQuantity(), 99);
+        Assert.assertEquals(result_1.getTradeOperation(), TradeOperation.BUY);
+    }
+
+    //insert ->cancel -> insert
+    //but different tradeId
+    @Test
+    public void complexCalcTest2() {
+        ITradeRepository tradeRepository = new TradeRepositoryCacheImpl();
+        TradeCalcServiceImpl tradeCalcService = new TradeCalcServiceImpl(tradeRepository);
+        tradeCalcService.clearAll();
+        tradeCalcService.insert(createTrade(1, "REL", 20, TradeOperation.BUY));
+        tradeCalcService.cancel(createTrade(1, "REL", 20, TradeOperation.SELL));
+        tradeCalcService.insert(createTrade(2, "REL", 99, TradeOperation.SELL));
+        tradeCalcService.insert(createTrade(3, "REL", 50, TradeOperation.BUY));
+        CalculationResult result_1 = tradeCalcService.calculate("REL");
+        Assert.assertEquals(result_1.getSecurityCode(), "REL");
+        Assert.assertEquals(result_1.getQuantity(), -49);
+        Assert.assertEquals(result_1.getTradeOperation(), TradeOperation.BUY);
     }
 
     private Trade createTrade(long id, String sc, int quantity, TradeOperation tradeOperation) {
