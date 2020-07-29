@@ -2,7 +2,7 @@
 
     <property resource="logback.properties"/>
     <appender name="ROOT_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>/usr/local/logs/${appName}.log</file>
+        <file>./logs/${appName}.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>/usr/local/logs/${appName}.%d{yyyy-MM-dd}.%i.log.zip
             </fileNamePattern>

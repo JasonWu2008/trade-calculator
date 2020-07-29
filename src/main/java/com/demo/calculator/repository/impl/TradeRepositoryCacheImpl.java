@@ -5,7 +5,9 @@ import com.demo.calculator.exceptions.TradeInputInvalidException;
 import com.demo.calculator.repository.ITradeRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,6 +24,15 @@ public class TradeRepositoryCacheImpl implements ITradeRepository {
     @Override
     public void clearAll() {
         TRADE_CACHE.clear();
+    }
+
+    @Override
+    public List<Trade> findAll() {
+        return new ArrayList<>(TRADE_CACHE.values());
+    }
+
+    public List<String> listSecurityCodes() {
+        return new ArrayList<>(TRADE_QUEUE.keySet());
     }
 
     public Map<Long, Trade> findTrades(String securityCode) {

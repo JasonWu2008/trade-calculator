@@ -21,37 +21,19 @@
     <build>
         <resources>
             <resource>
-                <directory>../src/main/resources</directory>
+                <directory>src/main/resources</directory>
             </resource>
         </resources>
 
         <testResources>
             <testResource>
-                <directory>../src/test/java</directory>
+                <directory>src/test/java</directory>
             </testResource>
             <testResource>
-                <directory>../src/test/resources</directory>
+                <directory>src/test/resources</directory>
             </testResource>
         </testResources>
     </build>
-
-    <profiles>
-        <profile>
-            <id>dev</id>
-            <properties>
-                <env>dev</env>
-                <build.profile.id>dev</build.profile.id>
-            </properties>
-            <build>
-                <resources>
-                    <resource>
-                        <directory>../src/main/${build.profile.id}</directory>
-                    </resource>
-                </resources>
-                <finalName>${project.artifactId}</finalName>
-            </build>
-        </profile>
-    </profiles>
 
     <dependencies>
         <dependency>
@@ -97,6 +79,16 @@
                     <artifactId>mockito-junit-jupiter</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.11</version>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+            <version>1.2.73</version>
         </dependency>
         <dependency>
             <groupId>joda-time</groupId>

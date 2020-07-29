@@ -10,6 +10,8 @@ import com.demo.calculator.repository.ITradeRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -22,6 +24,16 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
     }
 
     @Override
+    public List<Trade> findAll() {
+        return tradeRepository.findAll();
+    }
+
+    @Override
+    public List<Trade> findTrades(String securityCode) {
+        return new ArrayList<>(tradeRepository.findTrades(securityCode).values());
+    }
+
+    @Override
     public CalculationResult calculate(String securityCode) {
         Map<Long, Trade> tradeMap = tradeRepository.findTrades(securityCode);
         CalculationResult calculationResult = new CalculationResult();
@@ -31,6 +43,22 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
             processSell(calculationResult, trade);
         }
         return calculationResult;
+    }
+    @Override
+    public List<CalculationResult> listCalcResults() {
+        List<CalculationResult> calculationResults = new ArrayList<>();
+        List<String> securityCodes = tradeRepository.listSecurityCodes();
+        for (String securityCode : securityCodes) {
+            Map<Long, Trade> tradeMap = tradeRepository.findTrades(securityCode);
+            CalculationResult calculationResult = new CalculationResult();
+            calculationResult.setSecurityCode(securityCode);
+            for (Trade trade : tradeMap.values()) {
+                processBuy(calculationResult, trade);
+                processSell(calculationResult, trade);
+            }
+            calculationResults.add(calculationResult);
+        }
+        return calculationResults;
     }
 
     //check insert duplicate

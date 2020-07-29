@@ -1,5 +1,6 @@
 package com.demo.calculator.entity;
 
+import com.demo.calculator.model.InputTrade;
 import lombok.Data;
 
 import java.util.concurrent.atomic.AtomicLong;
@@ -13,7 +14,13 @@ public class Trade {
     private int quantity;
     private TradeOperation tradeOperation;
 
-    public void increaseId() {
-        this.tradeId = ID_SEQUENCE.decrementAndGet();
+    public static Trade copyFromInputTrade(InputTrade inputTrade) {
+        Trade trade = new Trade();
+        trade.setTradeId(inputTrade.getTradeId());
+        trade.setVersion(inputTrade.getVersion());
+        trade.setSecurityCode(inputTrade.getSecurityCode());
+        trade.setQuantity(inputTrade.getQuantity());
+        trade.setTradeOperation(inputTrade.getTradeOperation());
+        return trade;
     }
 }
