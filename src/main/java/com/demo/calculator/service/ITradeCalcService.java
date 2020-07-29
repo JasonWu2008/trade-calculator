@@ -7,7 +7,9 @@ public interface ITradeCalcService {
 
     Trade update(Trade trade);
 
-    Trade reset(Trade trade);
+    Trade cancel(Trade trade);
+
+    Trade findLastTrade(String securityCode);
 
     Trade load(long tradeId);
 }

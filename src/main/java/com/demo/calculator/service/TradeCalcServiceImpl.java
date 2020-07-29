@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class TradeCalcServiceImpl implements ITradeCalcService {
-
     private ITradeRepository tradeRepository;
 
     @Autowired
@@ -19,7 +18,7 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
     }
 
     //check insert duplicate
-    //update last Quantity and Buy/Sell by key:SecurityCode
+    //insert
     public Trade insert(Trade trade) {
         if (trade.getTradeId() != null && tradeRepository.load(trade.getTradeId()) != null) {
             throw new DuplicatedTradeException("Trade is duplicated : " + trade.getTradeId());
@@ -41,11 +40,12 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
         existed.setQuantity(trade.getQuantity());
         existed.setTradeOperation(trade.getTradeOperation());
         existed.setSecurityCode(trade.getSecurityCode());
-        return tradeRepository.override(trade);
+        tradeRepository.update(existed);
+        return existed;
     }
 
-    //only reset with specified tradeId
-    public Trade reset(Trade trade) {
+    //only cancel with specified tradeId
+    public Trade cancel(Trade trade) {
         if (trade == null || trade.getTradeId() == null) {
             throw new TradeInputInvalidException();
         }
@@ -57,11 +57,17 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
         existed.setQuantity(0);
         existed.setTradeOperation(trade.getTradeOperation());
         existed.setSecurityCode(trade.getSecurityCode());
-        return tradeRepository.override(trade);
+        return existed;
     }
-public void clearAll(){
-    tradeRepository.clearAll();
-}
+
+    public Trade findLastTrade(String securityCode) {
+        return tradeRepository.findLastTrade(securityCode);
+    }
+
+    void clearAll() {
+        tradeRepository.clearAll();
+    }
+
     @Override
     public Trade load(long tradeId) {
         return tradeRepository.load(tradeId);
