@@ -1,5 +1,5 @@
 # trade-calculator
-### Resign,Solution
+### Design and Solution
 * Using two Hashmaps as storage to store trade data(TRADE_CACHE, TRADE_QUEUE in TradeRepositoryCacheImpl).
 * One is used for ID searching and another is used for searching and updating by SecurityCode.
 * The insert/update/cancel operations is defined at ITradeRepository.
