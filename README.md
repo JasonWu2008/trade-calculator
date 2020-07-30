@@ -1,8 +1,8 @@
 # trade-calculator
 ### Design and Solution
 * Using two Hashmaps as storage to store trade data(TRADE_CACHE, TRADE_QUEUE in TradeRepositoryCacheImpl).
-* One is used for ID searching and another is used for searching and updating by SecurityCode.
-* The insert/update/cancel operations is defined at ITradeRepository.
+* One is used for ID searching and another one is used for searching and updating by SecurityCode.
+* The insert/update/cancel operations are defined at ITradeRepository.
 * Using a ReentrantLock to lock up data for the modifications.
 ### APIs (Please run: com.demo.calculator.Application)
 * [Upload data](http://localhost:9090/calculator/upload?contents=1,1,REL,50,INSERT,BUY;2,1,ITC,40,INSERT,SELL;3,1,INF,70,INSERT,BUY;1,2,REL,60,UPDATE,BUY;2,2,ITC,30,CANCEL,BUY;4,1,INF,20,INSERT,SELL) 
