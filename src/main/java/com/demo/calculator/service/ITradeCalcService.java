@@ -14,6 +14,8 @@ public interface ITradeCalcService {
 
     Trade load(long tradeId);
 
+    void clearCache();
+
     CalculationResult calculate(String securityCode);
 
     List<CalculationResult> listCalcResults();

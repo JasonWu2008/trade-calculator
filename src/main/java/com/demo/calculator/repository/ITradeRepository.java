@@ -20,7 +20,5 @@ public interface ITradeRepository {
 
     Trade save(Trade trade);
 
-    Trade override(Trade trade);
-
     void clearAll();
 }

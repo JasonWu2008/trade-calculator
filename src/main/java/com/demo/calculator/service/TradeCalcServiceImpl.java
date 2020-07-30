@@ -24,6 +24,11 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
     }
 
     @Override
+    public void clearCache() {
+        tradeRepository.clearAll();
+    }
+
+    @Override
     public List<Trade> findAll() {
         return tradeRepository.findAll();
     }
@@ -44,6 +49,7 @@ public class TradeCalcServiceImpl implements ITradeCalcService {
         }
         return calculationResult;
     }
+
     @Override
     public List<CalculationResult> listCalcResults() {
         List<CalculationResult> calculationResults = new ArrayList<>();

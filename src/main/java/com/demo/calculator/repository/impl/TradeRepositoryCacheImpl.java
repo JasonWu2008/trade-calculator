@@ -3,18 +3,21 @@ package com.demo.calculator.repository.impl;
 import com.demo.calculator.entity.Trade;
 import com.demo.calculator.exceptions.TradeInputInvalidException;
 import com.demo.calculator.repository.ITradeRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Repository
 public class TradeRepositoryCacheImpl implements ITradeRepository {
-    private static final ConcurrentHashMap<Long, Trade> TRADE_CACHE = new ConcurrentHashMap<>();
-    private static final ConcurrentHashMap<String, Map<Long, Trade>> TRADE_QUEUE = new ConcurrentHashMap<>();
+    private static final Logger logger = LoggerFactory.getLogger(TradeRepositoryCacheImpl.class);
+
+    private static final Lock TRADE_LOCKER = new ReentrantLock();
+    private static final Map<Long, Trade> TRADE_CACHE = new HashMap<>();
+    private static final Map<String, Map<Long, Trade>> TRADE_QUEUE = new HashMap<>();
 
     @Override
     public Trade load(long tradeId) {
@@ -24,6 +27,7 @@ public class TradeRepositoryCacheImpl implements ITradeRepository {
     @Override
     public void clearAll() {
         TRADE_CACHE.clear();
+        TRADE_QUEUE.clear();
     }
 
     @Override
@@ -44,27 +48,44 @@ public class TradeRepositoryCacheImpl implements ITradeRepository {
         if (trade == null || trade.getTradeId() == null) {
             throw new TradeInputInvalidException();
         }
-        addToQueue(trade);
-        return TRADE_CACHE.put(trade.getTradeId(), trade);
+        try {
+            TRADE_LOCKER.lock();
+            addToQueue(trade);
+            return TRADE_CACHE.put(trade.getTradeId(), trade);
+        } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        } finally {
+            TRADE_LOCKER.unlock();
+        }
+        return null;
     }
 
     @Override
     public void removeFromQueue(Trade trade) {
-        Map<Long, Trade> tradeMap = TRADE_QUEUE.get(trade.getSecurityCode());
-        if (tradeMap == null || tradeMap.isEmpty()) {
-            return;
+        try {
+            TRADE_LOCKER.lock();
+            Map<Long, Trade> tradeMap = TRADE_QUEUE.get(trade.getSecurityCode());
+            if (tradeMap == null || tradeMap.isEmpty()) {
+                return;
+            }
+            tradeMap.remove(trade.getTradeId());
+        } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        } finally {
+            TRADE_LOCKER.unlock();
         }
-        tradeMap.remove(trade.getTradeId());
     }
 
     @Override
     public void addToQueue(Trade trade) {
-        Map<Long, Trade> tradeMap = TRADE_QUEUE.computeIfAbsent(trade.getSecurityCode(), k -> new LinkedHashMap<>());
-        tradeMap.put(trade.getTradeId(), trade);
-    }
-
-    @Override
-    public Trade override(Trade trade) {
-        return TRADE_CACHE.put(trade.getTradeId(), trade);
+        try {
+            TRADE_LOCKER.lock();
+            Map<Long, Trade> tradeMap = TRADE_QUEUE.computeIfAbsent(trade.getSecurityCode(), k -> new LinkedHashMap<>());
+            tradeMap.put(trade.getTradeId(), trade);
+        } catch (Exception ex) {
+            logger.error(ex.getMessage(), ex);
+        } finally {
+            TRADE_LOCKER.unlock();
+        }
     }
 }

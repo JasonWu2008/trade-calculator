@@ -92,8 +92,15 @@ public class ListTradeTransactionController {
     @GetMapping(path = "/listTrades")
     public String listTrades(String securityCode) {
         if (StringUtils.isBlank(securityCode)) {
-           return JSONArray.toJSONString(iTradeCalcService.findAll());
+            return JSONArray.toJSONString(iTradeCalcService.findAll());
         }
         return JSONArray.toJSONString(iTradeCalcService.findTrades(securityCode));
+    }
+
+    @ResponseBody
+    @GetMapping(path = "/clearCache")
+    public String clearCache() {
+        iTradeCalcService.clearCache();
+        return "Cache clear done.";
     }
 }
